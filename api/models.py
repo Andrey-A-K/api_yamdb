@@ -1,9 +1,35 @@
+<<<<<<< HEAD
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+=======
+from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-User = get_user_model()
+
+class User(AbstractUser):
+    ROLE_CHOICES = (
+        (1, 'user'),
+        (2, 'moderator'),
+        (3, 'admin')
+    )
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    username = models.CharField(
+        verbose_name='Пользователь',
+        max_length=50,
+        unique=True
+    )
+    bio = models.TextField(max_length=500, blank=True)
+    email = models.EmailField(max_length=254)
+    role = models.PositiveSmallIntegerField(
+        choices=ROLE_CHOICES, null=True, blank=True
+    )
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
+
+    def __str__(self):
+        return self.username
 
 
 class Categories(models.Model):
@@ -37,6 +63,7 @@ class Titles(models.Model):
                                  verbose_name='категория',
                                  related_name='category',
                                  help_text='Выберите категорию из списка')
+<<<<<<< HEAD
 
 
 class User(AbstractUser):
@@ -64,6 +91,8 @@ class User(AbstractUser):
 
 class Titles(models.Model):
     pass
+=======
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 
 
 class Reviews(models.Model):

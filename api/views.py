@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+=======
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from .models import Titles, Reviews
+from .serializers import (
+    CommentSerializer,
+    ReviewsSerializer
+)
+from rest_framework import permissions
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 from api.serializers import TitlesSerializer
 from api.serializers import CategoriesSerializer
 from api.serializers import GenresSerializer
@@ -14,6 +25,14 @@ from .serializers import (
     ReviewsSerializer
 )
 from rest_framework import permissions
+
+
+class IsAuthorOrReadOnly(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.author == request.user
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -39,6 +58,7 @@ class GenresViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name', ]
+<<<<<<< HEAD
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -47,6 +67,8 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.author == request.user
+=======
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

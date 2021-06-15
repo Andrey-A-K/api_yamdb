@@ -1,4 +1,28 @@
 from django.urls import path
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+from .views import ReviewsViewSet, CommentViewSet
+
+
+router_v1 = DefaultRouter()
+router_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews',
+    ReviewsViewSet,
+    basename='api_reviews'
+)
+router_v1.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='api_comments'
+)
+
+urlpatterns = [
+    path('v1/', include(router_v1.urls)),
+=======
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 from django.urls import include
 from rest_framework.authtoken import views
 from rest_framework.routers import DefaultRouter
@@ -26,6 +50,7 @@ urlpatterns = [
     # Все зарегистрированные в router пути доступны в router.urls
     path('v1/', include(router.urls)),
     path('v1/api-token-auth/', views.obtain_auth_token),
+<<<<<<< HEAD
 ]
 
 
@@ -43,4 +68,7 @@ router_v1.register(
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
+=======
+>>>>>>> 68454656fb98752b7f6d21a97bdbad61ec58e500
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 ]

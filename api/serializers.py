@@ -1,10 +1,14 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 from django.contrib.auth import get_user_model
 from .models import Comment, Reviews
 
 from .models import Genres
 from .models import Titles
 from .models import Categories
+=======
+from .models import Comment, Reviews, Titles, Genres, Categories
+>>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 
 User = get_user_model()
 
