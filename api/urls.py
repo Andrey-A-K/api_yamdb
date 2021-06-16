@@ -5,6 +5,7 @@ from .views import ReviewsViewSet, CommentViewSet, TitlesViewSet, CategoriesView
 
 
 router_v1 = DefaultRouter()
+router = DefaultRouter()
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewsViewSet,
