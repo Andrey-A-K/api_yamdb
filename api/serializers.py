@@ -28,14 +28,14 @@ class CategoriesSerializer(serializers.ModelSerializer):
 class TitlesSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(read_only=True, many=True)
-    # rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
 
-    # def get_rating(self):
-    #     return Reviews.objects.all()(rating=Avg('score'))
+    def get_rating(self, obj):
+        Titles.objects.annotate(rating=Avg('reviews__score')).all()
 
     class Meta:
         model = Titles
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
 
 
 class ReviewsSerializer(serializers.ModelSerializer):

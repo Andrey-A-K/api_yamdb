@@ -44,20 +44,14 @@ class Genres(models.Model):
 class Titles(models.Model):
     name = models.CharField(max_length=200)
     year = models.DateField(auto_now_add=True, blank=True, null=True)
-    # rating = models.ForeignKey(Reviews,
-    #                            on_delete=models.SET_NULL)
     description = models.TextField()
-    genre = models.ForeignKey(Genres,
-                              on_delete=models.SET_NULL,
-                              blank=True,
-                              null=True,
-                              related_name='genre_titles',
-                              help_text='Выберите жанр из списка')
+    genre = models.ManyToManyField(Genres,
+                                   blank=True,
+                                   related_name='genre_titles',)
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL,
                                  null=True,
-                                 related_name='category_titles',
-                                 help_text='Выберите категорию из списка')
+                                 related_name='category_titles',)
 
     def __str__(self):
         return f'{self.pk} - {self.name[:20]} - {self.category}'
