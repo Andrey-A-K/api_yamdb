@@ -1,5 +1,8 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
+from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.filters import SearchFilter
 from .models import Titles, Reviews
 from .serializers import (
     CommentSerializer,
@@ -24,21 +27,21 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'del']
+    http_method_names = ['get', 'post', 'delete']
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     lookup_field = 'slug'
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', ]
+    filter_backends = [SearchFilter]
+    search_fields = ['=name', ]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'del']
+    http_method_names = ['get', 'post', 'delete']
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     lookup_field = 'slug'
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', ]
+    filter_backends = [SearchFilter]
+    search_fields = ['=name', ]
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
