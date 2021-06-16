@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-from django.contrib.auth import get_user_model
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-
-=======
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -26,7 +20,6 @@ class User(AbstractUser):
     role = models.PositiveSmallIntegerField(
         choices=ROLE_CHOICES, null=True, blank=True
     )
->>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 
     def __str__(self):
         return self.username
@@ -34,18 +27,23 @@ class User(AbstractUser):
 
 class Categories(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f'{self.pk} - {self.name} - {self.slug}'
 
 
 class Genres(models.Model):
     name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
+    slug = models.SlugField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f'{self.pk} - {self.name} - {self.slug}'
 
 
 class Titles(models.Model):
     name = models.CharField(max_length=200)
-    year = models.DateTimeField('Дата',
-                                auto_now_add=True)
+    year = models.DateField(auto_now_add=True, blank=True, null=True)
     # rating = models.ForeignKey(Reviews,
     #                            on_delete=models.SET_NULL)
     description = models.TextField()
@@ -53,46 +51,16 @@ class Titles(models.Model):
                               on_delete=models.SET_NULL,
                               blank=True,
                               null=True,
-                              verbose_name='жанр',
-                              related_name='genre',
+                              related_name='genre_titles',
                               help_text='Выберите жанр из списка')
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL,
-                                 blank=True,
                                  null=True,
-                                 verbose_name='категория',
-                                 related_name='category',
+                                 related_name='category_titles',
                                  help_text='Выберите категорию из списка')
-<<<<<<< HEAD
-
-
-class User(AbstractUser):
-    ROLE_CHOICES = (
-        (1, 'user'),
-        (2, 'moderator'),
-        (3, 'admin')
-    )
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    username = models.CharField(
-        verbose_name='Пользователь',
-        max_length=50,
-        unique=True
-    )
-    bio = models.TextField(max_length=500, blank=True)
-    email = models.EmailField(max_length=254)
-    role = models.PositiveSmallIntegerField(
-        choices=ROLE_CHOICES, null=True, blank=True
-    )
 
     def __str__(self):
-        return self.username
-
-
-class Titles(models.Model):
-    pass
-=======
->>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
+        return f'{self.pk} - {self.name[:20]} - {self.category}'
 
 
 class Reviews(models.Model):

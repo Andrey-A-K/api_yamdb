@@ -1,16 +1,6 @@
+from django.db.models.aggregates import Avg
 from rest_framework import serializers
-<<<<<<< HEAD
-from django.contrib.auth import get_user_model
-from .models import Comment, Reviews
-
-from .models import Genres
-from .models import Titles
-from .models import Categories
-=======
 from .models import Comment, Reviews, Titles, Genres, Categories
->>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
-
-User = get_user_model()
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -21,7 +11,7 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = ('name', 'slug', 'genre')
+        fields = ('name', 'slug')
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -32,12 +22,16 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Categories
-        fields = ('name', 'slug', 'category')
+        fields = ('name', 'slug')
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    genre = GenresSerializer(many=True, required=False)
-    category = CategoriesSerializer(many=True, required=False)
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(read_only=True, many=True)
+    # rating = serializers.SerializerMethodField()
+
+    # def get_rating(self):
+    #     return Reviews.objects.all()(rating=Avg('score'))
 
     class Meta:
         model = Titles

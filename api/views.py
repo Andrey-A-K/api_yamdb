@@ -1,14 +1,14 @@
-<<<<<<< HEAD
-=======
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
+from rest_framework.response import Response
 from rest_framework import viewsets
+from rest_framework.filters import SearchFilter
 from .models import Titles, Reviews
 from .serializers import (
     CommentSerializer,
     ReviewsSerializer
 )
 from rest_framework import permissions
->>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
 from api.serializers import TitlesSerializer
 from api.serializers import CategoriesSerializer
 from api.serializers import GenresSerializer
@@ -17,14 +17,6 @@ from api.models import Categories
 from api.models import Genres
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from .models import Titles, Reviews
-from .serializers import (
-    CommentSerializer,
-    ReviewsSerializer
-)
-from rest_framework import permissions
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -43,32 +35,21 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'del']
+    http_method_names = ['get', 'post', 'delete']
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     lookup_field = 'slug'
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', ]
+    filter_backends = [SearchFilter]
+    search_fields = ['=name', ]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'del']
+    http_method_names = ['get', 'post', 'delete']
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     lookup_field = 'slug'
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', ]
-<<<<<<< HEAD
-
-
-class IsAuthorOrReadOnly(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user
-=======
->>>>>>> df908da128a6df3096ab6e7e678cf6dce37ab081
+    filter_backends = [SearchFilter]
+    search_fields = ['=name', ]
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
