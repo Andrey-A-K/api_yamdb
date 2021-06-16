@@ -1,16 +1,28 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
-User = get_user_model()
+
+User = settings.AUTH_USER_MODEL
+
+ROLE_CHOICES = (
+    ('USER', 'user'),
+    ('MODERATOR', 'moderator'),
+    ('ADMIN', 'admin')
+)
+
+
+class Categories(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+
+
+class Genres(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
 
 
 class User(AbstractUser):
-    ROLE_CHOICES = (
-        (1, 'user'),
-        (2, 'moderator'),
-        (3, 'admin')
-    )
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     username = models.CharField(
@@ -20,16 +32,33 @@ class User(AbstractUser):
     )
     bio = models.TextField(max_length=500, blank=True)
     email = models.EmailField(max_length=254)
-    role = models.PositiveSmallIntegerField(
-        choices=ROLE_CHOICES, null=True, blank=True
-    )
+    role = models.CharField(choices=ROLE_CHOICES, max_length=20)
 
     def __str__(self):
         return self.username
 
 
 class Titles(models.Model):
-    pass
+    name = models.CharField(max_length=200)
+    year = models.DateTimeField('Дата',
+                                auto_now_add=True)
+    # rating = models.ForeignKey(Reviews,
+    #                            on_delete=models.SET_NULL)
+    description = models.TextField()
+    genre = models.ForeignKey(Genres,
+                              on_delete=models.SET_NULL,
+                              blank=True,
+                              null=True,
+                              verbose_name='жанр',
+                              related_name='genre',
+                              help_text='Выберите жанр из списка')
+    category = models.ForeignKey(Categories,
+                                 on_delete=models.SET_NULL,
+                                 blank=True,
+                                 null=True,
+                                 verbose_name='категория',
+                                 related_name='category',
+                                 help_text='Выберите категорию из списка')
 
 
 class Reviews(models.Model):
