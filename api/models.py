@@ -1,13 +1,28 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
+
+
+User = settings.AUTH_USER_MODEL
+
+ROLE_CHOICES = (
+    ('USER', 'user'),
+    ('MODERATOR', 'moderator'),
+    ('ADMIN', 'admin')
+)
+
+
+class Categories(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+
+
+class Genres(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
 
 
 class User(AbstractUser):
-    ROLE_CHOICES = (
-        (1, 'user'),
-        (2, 'moderator'),
-        (3, 'admin')
-    )
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     username = models.CharField(
@@ -17,9 +32,7 @@ class User(AbstractUser):
     )
     bio = models.TextField(max_length=500, blank=True)
     email = models.EmailField(max_length=254)
-    role = models.PositiveSmallIntegerField(
-        choices=ROLE_CHOICES, null=True, blank=True
-    )
+    role = models.CharField(choices=ROLE_CHOICES, max_length=20)
 
     def __str__(self):
         return self.username

@@ -8,7 +8,6 @@ from .serializers import (
     CommentSerializer,
     ReviewsSerializer
 )
-from rest_framework import permissions
 from api.serializers import TitlesSerializer
 from api.serializers import CategoriesSerializer
 from api.serializers import GenresSerializer
@@ -17,14 +16,7 @@ from api.models import Categories
 from api.models import Genres
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-
-
-class IsAuthorOrReadOnly(permissions.BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user
+from .permissions import IsAuthorOrReadOnly
 
 
 class TitlesViewSet(viewsets.ModelViewSet):

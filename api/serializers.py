@@ -1,6 +1,6 @@
 from django.db.models.aggregates import Avg
 from rest_framework import serializers
-from .models import Comment, Reviews, Titles, Genres, Categories
+from .models import Comment, Reviews, Titles, Genres, Categories, User, ROLE_CHOICES
 
 
 class GenresSerializer(serializers.ModelSerializer):
@@ -52,3 +52,11 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
+
+
+class UserSerializer(serializers.ModelSerializer):
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
+
+    class Meta:
+        fields = '__all__'
+        model = User
