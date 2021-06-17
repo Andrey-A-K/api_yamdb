@@ -12,16 +12,6 @@ ROLE_CHOICES = (
 )
 
 
-class Categories(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
-
-
-class Genres(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
-
-
 class User(AbstractUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -38,31 +28,40 @@ class User(AbstractUser):
         return self.username
 
 
+class Categories(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f'{self.pk} - {self.name} - {self.slug}'
+
+
+class Genres(models.Model):
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=20, unique=True)
+
+    def __str__(self):
+        return f'{self.pk} - {self.name} - {self.slug}'
+
+
 class Titles(models.Model):
     name = models.CharField(max_length=200)
-    year = models.DateTimeField('Дата',
-                                auto_now_add=True)
-    # rating = models.ForeignKey(Reviews,
-    #                            on_delete=models.SET_NULL)
+    year = models.DateField(auto_now_add=True, blank=True, null=True)
     description = models.TextField()
-    genre = models.ForeignKey(Genres,
-                              on_delete=models.SET_NULL,
-                              blank=True,
-                              null=True,
-                              verbose_name='жанр',
-                              related_name='genre',
-                              help_text='Выберите жанр из списка')
+    genre = models.ManyToManyField(Genres,
+                                   blank=True,
+                                   related_name='genre_titles',)
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL,
-                                 blank=True,
                                  null=True,
-                                 verbose_name='категория',
-                                 related_name='category',
-                                 help_text='Выберите категорию из списка')
+                                 related_name='category_titles',)
+
+    def __str__(self):
+        return f'{self.pk} - {self.name[:20]} - {self.category}'
 
 
 class Reviews(models.Model):
-    titles = models.ForeignKey(
+    title = models.ForeignKey(
         Titles, on_delete=models.CASCADE, related_name="reviews"
     )
     author = models.ForeignKey(
@@ -82,17 +81,17 @@ class Reviews(models.Model):
         return self.text
 
     class Meta:
-        unique_together = ['author', 'titles']
+        unique_together = ['author', 'title']
 
 
 class Comment(models.Model):
     review = models.ForeignKey(
         Reviews, on_delete=models.CASCADE, related_name="comments"
     )
+    text = models.TextField()
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="comments"
     )
-    text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         "Дата добавления", auto_now_add=True, db_index=True
     )
