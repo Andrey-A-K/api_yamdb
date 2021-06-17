@@ -8,7 +8,6 @@ from .views import CategoriesViewSet, GenresViewSet, TitlesViewSet
 from .views import CommentViewSet, ReviewsViewSet
 
 router_v1 = DefaultRouter()
-router = DefaultRouter()
 router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewsViewSet,

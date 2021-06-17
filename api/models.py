@@ -61,7 +61,7 @@ class Titles(models.Model):
 
 
 class Reviews(models.Model):
-    titles = models.ForeignKey(
+    title = models.ForeignKey(
         Titles, on_delete=models.CASCADE, related_name="reviews"
     )
     author = models.ForeignKey(
@@ -81,17 +81,17 @@ class Reviews(models.Model):
         return self.text
 
     class Meta:
-        unique_together = ['author', 'titles']
+        unique_together = ['author', 'title']
 
 
 class Comment(models.Model):
     review = models.ForeignKey(
         Reviews, on_delete=models.CASCADE, related_name="comments"
     )
+    text = models.TextField()
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="comments"
     )
-    text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         "Дата добавления", auto_now_add=True, db_index=True
     )

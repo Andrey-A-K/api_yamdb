@@ -48,8 +48,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
 
     def get_queryset(self):
-        titles = get_object_or_404(Titles, id=self.kwargs['titles_id'],)
-        return titles.reviews.all()
+        queryset = Reviews.objects.filter(titles__id=self.kwargs.get('titles_id'))
+        return queryset
 
     def perform_create(self, serializer):
         titles = get_object_or_404(Titles, id=self.kwargs['titles_id'],)
