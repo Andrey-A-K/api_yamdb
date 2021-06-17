@@ -5,6 +5,10 @@ from django.conf import settings
 
 User = settings.AUTH_USER_MODEL
 
+USER = 1
+MODERATOR = 2
+ADMIN = 3
+
 ROLE_CHOICES = (
     ('USER', 'user'),
     ('MODERATOR', 'moderator'),
@@ -13,16 +17,9 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    username = models.CharField(
-        verbose_name='Пользователь',
-        max_length=50,
-        unique=True
-    )
+    email = models.EmailField(null=True, blank=True)
     bio = models.TextField(max_length=500, blank=True)
-    email = models.EmailField(max_length=254)
-    role = models.CharField(choices=ROLE_CHOICES, max_length=20)
+    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
 
     def __str__(self):
         return self.username

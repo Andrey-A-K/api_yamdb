@@ -1,21 +1,15 @@
-from django.shortcuts import get_object_or_404
 from django.db.models import Avg
-from rest_framework.response import Response
-from rest_framework import viewsets
-from rest_framework.filters import SearchFilter
-from .models import Titles, Reviews
-from .serializers import (
-    CommentSerializer,
-    ReviewsSerializer
-)
-from api.serializers import TitlesSerializer
-from api.serializers import CategoriesSerializer
-from api.serializers import GenresSerializer
-from api.models import Titles
-from api.models import Categories
-from api.models import Genres
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, viewsets
+from rest_framework.filters import SearchFilter
+from rest_framework.response import Response
+
+from api.models import Categories, Genres, Reviews, Titles, User
+from api.serializers import (CategoriesSerializer, CommentSerializer,
+                             GenresSerializer, ReviewsSerializer,
+                             TitlesSerializer, UserSerializer)
+
 from .permissions import IsAuthorOrReadOnly
 
 
@@ -24,6 +18,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     serializer_class = TitlesSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'genre', 'name', 'year']
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -33,6 +28,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -42,6 +38,7 @@ class GenresViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
@@ -70,3 +67,10 @@ class CommentViewSet(viewsets.ModelViewSet):
             titles__id=self.kwargs['titles_id']
         )
         serializer.save(author=self.request.user, review=review)
+
+
+class UserVewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAuthorOrReadOnly, permissions.IsAdminUser]
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    queryset = User.objects.all()
