@@ -12,16 +12,6 @@ ROLE_CHOICES = (
 )
 
 
-class Categories(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
-
-
-class Genres(models.Model):
-    name = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
-
-
 class User(AbstractUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -58,6 +48,8 @@ class Titles(models.Model):
     name = models.CharField(max_length=200)
     year = models.DateField(auto_now_add=True, blank=True, null=True)
     description = models.TextField()
+    # rating = models.ManyToManyField('Reviews',
+    #                                 related_name='rating_title')
     genre = models.ManyToManyField(Genres,
                                    blank=True,
                                    related_name='genre_titles',)
