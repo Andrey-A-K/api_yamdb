@@ -5,6 +5,10 @@ from django.conf import settings
 
 User = settings.AUTH_USER_MODEL
 
+USER = 1
+MODERATOR = 2
+ADMIN = 3
+
 ROLE_CHOICES = (
     ('USER', 'user'),
     ('MODERATOR', 'moderator'),
@@ -13,16 +17,9 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    username = models.CharField(
-        verbose_name='Пользователь',
-        max_length=50,
-        unique=True
-    )
+    email = models.EmailField(null=True, blank=True)
     bio = models.TextField(max_length=500, blank=True)
-    email = models.EmailField(max_length=254)
-    role = models.CharField(choices=ROLE_CHOICES, max_length=20)
+    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
 
     def __str__(self):
         return self.username
@@ -63,7 +60,7 @@ class Titles(models.Model):
 
 
 class Reviews(models.Model):
-    titles = models.ForeignKey(
+    title = models.ForeignKey(
         Titles, on_delete=models.CASCADE, related_name="reviews"
     )
     author = models.ForeignKey(
@@ -83,17 +80,17 @@ class Reviews(models.Model):
         return self.text
 
     class Meta:
-        unique_together = ['author', 'titles']
+        unique_together = ['author', 'title']
 
 
 class Comment(models.Model):
     review = models.ForeignKey(
         Reviews, on_delete=models.CASCADE, related_name="comments"
     )
+    text = models.TextField()
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="comments"
     )
-    text = models.TextField()
-    created = models.DateTimeField(
+    pub_date = models.DateTimeField(
         "Дата добавления", auto_now_add=True, db_index=True
     )

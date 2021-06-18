@@ -9,12 +9,14 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 class IsAdminPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'admin'
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.role == 'admin')
 
 
 class IsModeratorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'moderator'
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.role == 'moderator')
 
 
 class IsUserPermission(permissions.BasePermission):
