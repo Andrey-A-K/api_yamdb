@@ -28,6 +28,47 @@ from rest_framework.permissions import (
 User = get_user_model()
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    permission_classes = [IsAdminUser | IsAdmin]
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = [SearchFilter]
+    search_fields = ['username', ]
+
+    @action(methods=['patch', 'get'], detail=False,
+            permission_classes=[IsAuthenticated],
+            url_path='me', url_name='me')
+    def me(self, request, *args, **kwargs):
+        instance = self.request.user
+        serializer = self.get_serializer(instance)
+        if self.request.method == 'PATCH':
+            serializer = self.get_serializer(
+                instance, data=request.data, partial=True)
+            serializer.is_valid()
+            serializer.save()
+        return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_confirmation_code(request):
+    email = request.data.get('email')
+    if email is None:
+        message = 'Электронная почта обязательна'
+    else:
+        if email_is_valid(email):
+            user = get_object_or_404(User, email=email)
+            confirmation_code = default_token_generator.make_token(user)
+            generate_mail(email, confirmation_code)
+            user.confirmation_code = confirmation_code
+            message = email
+            user.save()
+        else:
+            message = 'Требуется действующий адрес электронной почты'
+    return Response({'email': message})
+
+
 class TitlesViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUserOrReadOnly, ]
     queryset = Titles.objects.all().annotate(Avg('reviews__score'))
@@ -58,47 +99,6 @@ class GenresViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [SearchFilter]
     search_fields = ['=name', ]
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    permission_classes = [IsAdminUser | IsAdmin]
-    serializer_class = UserSerializer
-    lookup_field = 'username'
-    filter_backends = [SearchFilter]
-    search_fields = ['username', ]
-
-    @action(methods=['patch', 'get'], detail=False,
-            permission_classes=[IsAuthenticated],
-            url_path='me', url_name='me')
-    def me(self, request, *args, **kwargs):
-        instance = self.request.user
-        serializer = self.get_serializer(instance)
-        if self.request.method == 'PATCH':
-            serializer = self.get_serializer(
-                instance, data=request.data, partial=True)
-            serializer.is_valid()
-            serializer.save()
-        return Response(serializer.data)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def send_confirmation_code(request):
-    email = request.data.get('email')
-    if email is None:
-        message = 'Email is required'
-    else:
-        if email_is_valid(email):
-            user = get_object_or_404(User, email=email)
-            confirmation_code = default_token_generator.make_token(user)
-            generate_mail(email, confirmation_code)
-            user.confirmation_code = confirmation_code
-            message = email
-            user.save()
-        else:
-            message = 'Valid email is required'
-    return Response({'email': message})
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

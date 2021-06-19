@@ -14,9 +14,9 @@ def email_is_valid(email):
 
 
 def generate_mail(to_email, code):
-    subject = 'Confirmation code для YaMDB'
+    subject = 'Код подтверждения'
     to = to_email
-    text_content = f'''Вы запросили confirmation code для работы с API YaMDB.\n
+    text_content = f'''Код подтверждения для работы с API YaMDB.\n
                         Внимание, храните его в тайне {code}'''
     mail.send_mail(
         subject, text_content,
