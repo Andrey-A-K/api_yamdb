@@ -1,20 +1,21 @@
 from django.contrib.auth import get_user_model
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import permissions
+from .filters import TitleFilter
 from rest_framework.response import Response
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
 from .permissions import (
-    IsAdmin, IsAdminUserOrReadOnly, ReviewCommentPermissions
+    IsAdmin, IsAdminUserOrReadOnly, IsModerator, IsOwner, IsUser
 )
 from rest_framework.permissions import (
     AllowAny,
     IsAdminUser,
     IsAuthenticated,
-    IsAuthenticatedOrReadOnly
 )
 from .models import Titles, Reviews, Titles, Categories, Genres
 from .serializers import (
@@ -23,7 +24,7 @@ from .serializers import (
     GenresSerializer,
     TitlesReadSerializer,
     CategoriesSerializer,
-    TitlesWriteSerializer,
+    TitlesCreateSerializer,
     UserSerializer
 )
 from django_filters.rest_framework import DjangoFilterBackend
@@ -86,38 +87,57 @@ class ModelMixinSet(mixins.ListModelMixin,
     pass
 
 
-class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all().annotate(Avg('reviews_title__score'))
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category', 'genre', 'name', 'year']
-    permission_classes = [IsAdminUserOrReadOnly]
-
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return TitlesReadSerializer
-        return TitlesWriteSerializer
-
-
 class CategoriesViewSet(ModelMixinSet):
+    pagination_class = PageNumberPagination
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     lookup_field = 'slug'
     filter_backends = [SearchFilter]
-    search_fields = ['=name', ]
+    search_fields = ['name', ]
     permission_classes = [IsAdminUserOrReadOnly]
 
 
 class GenresViewSet(ModelMixinSet):
+    pagination_class = PageNumberPagination
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     lookup_field = 'slug'
     filter_backends = [SearchFilter]
-    search_fields = ['=name', ]
+    search_fields = ['name', ]
     permission_classes = [IsAdminUserOrReadOnly]
 
 
-class ReviewsViewSet(viewsets.ModelViewSet):
-    permission_classes = [ReviewCommentPermissions, IsAuthenticatedOrReadOnly]
+class TitlesViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUserOrReadOnly]
+    queryset = Titles.objects.all().annotate(Avg('reviews_title__score'))
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = TitleFilter
+    filterset_fields = ['name', 'category', 'genre', 'year']
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesReadSerializer
+        return TitlesCreateSerializer
+
+
+class ReviewCommentMixin(viewsets.ModelViewSet):
+    permission_classes = [IsOwner]
+    permission_classes_by_action = {'list': [AllowAny],
+                                    'create': [IsUser | IsAdmin | IsModerator],
+                                    'retrieve': [AllowAny],
+                                    'partial_update': [IsOwner],
+                                    'destroy': [IsAdmin | IsModerator]}
+
+    def get_permissions(self):
+        try:
+            return [permission() for permission
+                    in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            return [permission() for permission in self.permission_classes]
+
+
+class ReviewsViewSet(ReviewCommentMixin):
+    pagination_class = PageNumberPagination
     serializer_class = ReviewsSerializer
 
     def get_queryset(self):
@@ -131,8 +151,8 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=title)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
-    permission_classes = [ReviewCommentPermissions, IsAuthenticatedOrReadOnly]
+class CommentViewSet(ReviewCommentMixin):
+    pagination_class = PageNumberPagination
     serializer_class = CommentSerializer
 
     def get_queryset(self):

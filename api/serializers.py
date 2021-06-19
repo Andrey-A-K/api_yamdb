@@ -76,7 +76,7 @@ class TitlesReadSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
 
-class TitlesWriteSerializer(serializers.ModelSerializer):
+class TitlesCreateSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
                                             slug_field='slug',
                                             required=False)
@@ -96,6 +96,8 @@ class ReviewsSerializer(serializers.ModelSerializer):
         model = Reviews
 
     def validate(self, data):
+        if self.context['request'].method != 'POST':
+            return data
         user = self.context['request'].user
         title_id = self.context['view'].kwargs['title_id']
         if Reviews.objects.filter(author=user, title__id=title_id).exists():
