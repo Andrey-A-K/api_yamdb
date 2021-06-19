@@ -1,6 +1,14 @@
 from django.urls import path
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from django.urls import include
+from rest_framework.authtoken import views
+from .views import ReviewsViewSet
+from .views import CommentViewSet
+from .views import TitlesViewSet
+from .views import CategoriesViewSet
+from .views import GenresViewSet
+from .views import UserVewSet
 from .views import (
     ReviewsViewSet,
     CommentViewSet,

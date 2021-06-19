@@ -23,7 +23,7 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(db_index=True, max_length=200)
     slug = models.SlugField(max_length=20, unique=True)
 
     def __str__(self):
@@ -31,7 +31,7 @@ class Categories(models.Model):
 
 
 class Genres(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(db_index=True, max_length=200)
     slug = models.SlugField(max_length=20, unique=True)
 
     def __str__(self):
@@ -40,15 +40,15 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     name = models.CharField(max_length=200)
-    year = models.DateField(auto_now_add=True, blank=True, null=True)
-    description = models.TextField()
+    year = models.IntegerField(default=0, db_index=True)
+    description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genres,
                                    blank=True,
-                                   related_name='genre_titles',)
+                                   related_name='genre_titles')
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL,
                                  null=True,
-                                 related_name='category_titles',)
+                                 related_name='category_titles')
 
     def __str__(self):
         return f'{self.pk} - {self.name[:20]} - {self.category}'
@@ -56,7 +56,7 @@ class Titles(models.Model):
 
 class Reviews(models.Model):
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name="reviews"
+        Titles, on_delete=models.CASCADE, related_name="reviews_title"
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="reviews"

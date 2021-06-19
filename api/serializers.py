@@ -1,3 +1,13 @@
+# from django.db.models.aggregates import Avg, Count
+from rest_framework import serializers
+# from rest_framework.fields import NullBooleanField
+from .models import Comment
+from .models import Reviews
+from .models import Titles
+from .models import Genres
+from .models import Categories
+from .models import User
+# from .models import ROLE_CHOICES
 from .models import Comment, Reviews, Titles, Genres, Categories, User
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
@@ -53,30 +63,28 @@ class CategoriesSerializer(serializers.ModelSerializer):
         model = Categories
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitlesReadSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True
+    genre = GenresSerializer(many=True, read_only=True)
+    rating = serializers.FloatField(
+        source='reviews_title__score__avg', read_only=True
     )
 
     class Meta:
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
-        )
         model = Titles
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
 
 
-class TitleCreateSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        slug_field='slug', many=True, queryset=Genres.objects.all()
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Categories.objects.all()
-    )
+class TitlesWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
+                                            slug_field='slug',
+                                            required=False)
+    genre = serializers.SlugRelatedField(queryset=Genres.objects.all(),
+                                         slug_field='slug', many=True)
 
     class Meta:
-        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        fields = '__all__'
         model = Titles
 
 
