@@ -21,4 +21,5 @@ class IsModeratorPermission(permissions.BasePermission):
 
 class IsUserPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.role == 'user'
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.role == 'user')
