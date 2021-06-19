@@ -58,7 +58,8 @@ class ReviewCommentPermissions(BasePermission):
 
         if request.method in ('PATCH', 'DELETE'):
             return (request.user == obj.author
-                    or request.user.role == IsAdmin or IsModerator)
+                    or request.user.role == IsAdmin
+                    or request.user.role == IsModerator)
 
         if request.method in SAFE_METHODS:
             return True
