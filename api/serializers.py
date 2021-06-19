@@ -1,35 +1,66 @@
-from django.db.models.aggregates import Avg, Count
+# from django.db.models.aggregates import Avg, Count
 from rest_framework import serializers
-from rest_framework.fields import NullBooleanField
+# from rest_framework.fields import NullBooleanField
 from .models import Comment
 from .models import Reviews
 from .models import Titles
 from .models import Genres
 from .models import Categories
 from .models import User
-from .models import ROLE_CHOICES
+# from .models import ROLE_CHOICES
+from .models import Comment, Reviews, Titles, Genres, Categories, User
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+User = get_user_model()
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+class EmailAuthSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    confirmation_code = serializers.CharField(max_length=100)
+
+    def validate(self, data):
+        user = get_object_or_404(
+            User, confirmation_code=data['confirmation_code'],
+            email=data['email']
+        )
+        return get_tokens_for_user(user)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('first_name', 'last_name', 'username',
+                  'bio', 'role', 'email')
+        model = User
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Genres
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Genres
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Categories
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Categories
 
 
 class TitlesReadSerializer(serializers.ModelSerializer):
@@ -70,15 +101,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
-
-
-class UserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES)
-    user = serializers.SlugRelatedField(
-        slug_field='username',
-        read_only=True
-    )
-
-    class Meta:
-        fields = '__all__'
-        model = User

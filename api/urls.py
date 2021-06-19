@@ -9,6 +9,21 @@ from .views import TitlesViewSet
 from .views import CategoriesViewSet
 from .views import GenresViewSet
 from .views import UserVewSet
+from .views import (
+    ReviewsViewSet,
+    CommentViewSet,
+    UserViewSet,
+    TitlesViewSet,
+    CategoriesViewSet,
+    GenresViewSet,
+    send_confirmation_code
+)
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from .serializers import EmailAuthSerializer
+
 
 router_v1 = DefaultRouter()
 router_v1.register(
@@ -22,10 +37,30 @@ router_v1.register(
     basename='api_comments'
 )
 router_v1.register('titles', TitlesViewSet, basename='titles')
+router_v1.register(r'users', UserViewSet)
 router_v1.register('categories', CategoriesViewSet, basename='categories')
 router_v1.register('genres', GenresViewSet, basename='genres')
-router_v1.register('users', UserVewSet, basename='users')
+
+
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/api-token-auth/', views.obtain_auth_token),
+    path('v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path(
+        'v1/token/refresh/',
+        TokenRefreshView.as_view(),
+        name='token_refresh'
+    ),
+]
+
+v1_auth_patterns = [
+    path('email/', send_confirmation_code),
+    path('token/',
+         TokenObtainPairView.as_view(serializer_class=EmailAuthSerializer),
+         name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]
+
+urlpatterns = [
+    path('v1/auth/', include(v1_auth_patterns)),
+    path('v1/', include(router_v1.urls))
 ]
