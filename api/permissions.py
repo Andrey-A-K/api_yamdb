@@ -48,3 +48,26 @@ class IsAdminUserOrReadOnly(BasePermission):
             return True
         else:
             return request.user.is_staff
+
+
+class ReviewCommentPermissions(BasePermission):
+    """Права доступа для комментариев и отзывов"""
+    def has_object_permission(self, request, view, obj):
+        if request.method == 'POST':
+            return not request.user.is_anonymous()
+
+        if request.method in ('PATCH', 'DELETE'):
+            return (request.user == obj.author
+                    or request.user.role == IsAdmin or IsModerator)
+
+        if request.method in SAFE_METHODS:
+            return True
+        return False
+
+
+class IsAuthorOrReadOnly(BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return obj.author == request.user
