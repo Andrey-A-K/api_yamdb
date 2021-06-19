@@ -31,10 +31,10 @@ class CategoriesSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
-class TitlesSerializer(serializers.ModelSerializer):
+class TitlesReadSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
-    genre = GenresSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
+    genre = GenresSerializer(many=True, read_only=True)
+    rating = serializers.SerializerMethodField(read_only=True)
 
     def get_rating(self, title):
         return Titles.objects.all().aggregate(
@@ -42,9 +42,19 @@ class TitlesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Titles
-        # fields = '__all__'
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
+
+
+class TitlesWriteSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
+                                            slug_field='slug')
+    genre = serializers.SlugRelatedField(queryset=Genres.objects.all(),
+                                         slug_field='slug', many=True)
+
+    class Meta:
+        fields = '__all__'
+        model = Titles
 
 
 class ReviewsSerializer(serializers.ModelSerializer):

@@ -1,10 +1,12 @@
-from rest_framework import generics, mixins, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 from .models import Titles, Reviews
 from .serializers import CommentSerializer
+from .serializers import TitlesReadSerializer
+from .serializers import TitlesWriteSerializer
 from .serializers import ReviewsSerializer
 from rest_framework import permissions
-from api.serializers import TitlesSerializer
+
 from api.serializers import CategoriesSerializer
 from api.serializers import GenresSerializer
 from api.models import Titles
@@ -13,8 +15,6 @@ from api.models import Genres
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
-from rest_framework.decorators import action
 
 from api.models import User
 from api.serializers import UserSerializer
@@ -34,17 +34,21 @@ class ModelMixinSet(mixins.ListModelMixin,
                     mixins.CreateModelMixin,
                     mixins.DestroyModelMixin,
                     viewsets.GenericViewSet):
-    """Класс ModelMixinSet. класс для дальнейшего наследования."""
+    """Класс для дальнейшего наследования."""
 
     pass
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
-    serializer_class = TitlesSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'genre', 'name', 'year']
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return TitlesReadSerializer
+        return TitlesWriteSerializer
 
 
 class CategoriesViewSet(ModelMixinSet):
