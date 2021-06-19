@@ -1,3 +1,5 @@
+from django.db.models.aggregates import Avg
+from api.pagination import CustomPagination
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 from .models import Titles, Reviews
@@ -20,6 +22,7 @@ from api.models import User
 from api.serializers import UserSerializer
 
 from .permissions import IsAuthorOrReadOnly
+# from rest_framework.pagination import PageNumberPagination
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -40,10 +43,12 @@ class ModelMixinSet(mixins.ListModelMixin,
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    # queryset = Titles.objects.all()
+    queryset = Titles.objects.all().annotate(Avg('reviews_title__score'))
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'genre', 'name', 'year']
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # pagination_class = CustomPagination
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
