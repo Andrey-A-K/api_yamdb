@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import generics, mixins, viewsets
 from rest_framework.filters import SearchFilter
 from .models import Titles, Reviews
 from .serializers import CommentSerializer
@@ -12,6 +12,14 @@ from api.models import Categories
 from api.models import Genres
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
+from api.models import User
+from api.serializers import UserSerializer
+
+from .permissions import IsAuthorOrReadOnly
 
 
 class IsAuthorOrReadOnly(permissions.BasePermission):
@@ -20,18 +28,15 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return obj.author == request.user
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, viewsets
-from rest_framework.filters import SearchFilter
-from rest_framework.response import Response
 
-from api.models import Categories, Genres, Reviews, Titles, User
-from api.serializers import (CategoriesSerializer, CommentSerializer,
-                             GenresSerializer, ReviewsSerializer,
-                             TitlesSerializer, UserSerializer)
 
-from .permissions import IsAuthorOrReadOnly
+class ModelMixinSet(mixins.ListModelMixin,
+                    mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
+                    viewsets.GenericViewSet):
+    """Класс ModelMixinSet. класс для дальнейшего наследования."""
+
+    pass
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -42,8 +47,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'delete']
+class CategoriesViewSet(ModelMixinSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     lookup_field = 'slug'
@@ -52,8 +56,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
-class GenresViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'delete']
+class GenresViewSet(ModelMixinSet):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
     lookup_field = 'slug'
