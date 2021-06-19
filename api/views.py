@@ -7,8 +7,15 @@ from rest_framework.response import Response
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
-from .permissions import IsAdmin, IsAdminUserOrReadOnly
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from .permissions import (
+    IsAdmin, IsAdminUserOrReadOnly, ReviewCommentPermissions
+)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAdminUser,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly
+)
 from .models import Titles, Reviews, Titles, Categories, Genres
 from .serializers import (
     CommentSerializer,
@@ -110,20 +117,22 @@ class GenresViewSet(ModelMixinSet):
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
+    permission_classes = [ReviewCommentPermissions, IsAuthenticatedOrReadOnly]
     serializer_class = ReviewsSerializer
 
     def get_queryset(self):
         queryset = Reviews.objects.filter(
-            title__id=self.kwargs.get('titles_id')
+            title__id=self.kwargs.get('title_id')
         )
         return queryset
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, pk=self.kwargs['titles_id'],)
+        title = get_object_or_404(Titles, pk=self.kwargs['title_id'],)
         serializer.save(author=self.request.user, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    permission_classes = [ReviewCommentPermissions, IsAuthenticatedOrReadOnly]
     serializer_class = CommentSerializer
 
     def get_queryset(self):
