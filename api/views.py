@@ -142,7 +142,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 class UserVewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated,
-                          permissions.IsAuthorOrReadOnly,
                           permissions.IsAdminUser]
     http_method_names = ['get', 'post', 'patch', 'delete']
     queryset = User.objects.all()
