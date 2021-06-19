@@ -51,7 +51,6 @@ class IsAdminUserOrReadOnly(BasePermission):
 
 
 class ReviewCommentPermissions(BasePermission):
-    """Права доступа для комментариев и отзывов"""
     def has_object_permission(self, request, view, obj):
         if request.method == 'POST':
             return not request.user.is_anonymous()
