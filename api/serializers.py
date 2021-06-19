@@ -1,41 +1,83 @@
-from django.db.models.aggregates import Avg
+from .models import Comment, Reviews, Titles, Genres, Categories, User
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from .models import Comment, Reviews, Titles, Genres, Categories, User, ROLE_CHOICES
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+User = get_user_model()
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+class EmailAuthSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    confirmation_code = serializers.CharField(max_length=100)
+
+    def validate(self, data):
+        user = get_object_or_404(
+            User, confirmation_code=data['confirmation_code'],
+            email=data['email']
+        )
+        return get_tokens_for_user(user)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('first_name', 'last_name', 'username',
+                  'bio', 'role', 'email')
+        model = User
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Genres
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Genres
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Categories
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Categories
 
 
 class TitlesSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, obj):
-        Titles.objects.annotate(rating=Avg('reviews__score')).all()
+    rating = serializers.IntegerField(
+        source='reviews__score__avg', read_only=True
+    )
 
     class Meta:
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
         model = Titles
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genres.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Categories.objects.all()
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        model = Titles
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
@@ -52,11 +94,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
-
-
-class UserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES)
-
-    class Meta:
-        fields = '__all__'
-        model = User
