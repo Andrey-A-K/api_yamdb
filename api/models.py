@@ -1,5 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+import datetime
+from django.core.exceptions import ValidationError
+
+
+def validate_year(value):
+    year_date = datetime.date.today().year
+    if 0 < value <= year_date:
+        return value
+    else:
+        raise ValidationError('Введите корректный год')
 
 
 class User(AbstractUser):
@@ -50,44 +60,43 @@ class Titles(models.Model):
     name = models.CharField(max_length=200,
                             verbose_name='название произведения')
     year = models.IntegerField(default=0,
+                               validators=[validate_year],
                                db_index=True,
                                verbose_name='год выпуска')
     description = models.TextField(blank=True,
                                    verbose_name='описание произведения')
     genre = models.ManyToManyField(Genres,
                                    blank=True,
-                                   related_name='genre_titles')
+                                   related_name='genre_titles',
+                                   verbose_name='выберите жанр')
     category = models.ForeignKey(Categories,
                                  on_delete=models.SET_NULL,
                                  null=True,
-                                 related_name='category_titles')
+                                 related_name='category_titles',
+                                 verbose_name='выберите категорию')
 
     def __str__(self):
         return f'{self.pk} - {self.name[:20]} - {self.category}'
 
 
 class Reviews(models.Model):
-    title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews_title'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='автор отзыва'
-    )
+    title = models.ForeignKey(Titles,
+                              on_delete=models.CASCADE,
+                              verbose_name='произведение',
+                              related_name='reviews_title')
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='reviews',
+                               verbose_name='автор отзыва')
     text = models.TextField(verbose_name='текст отзыва')
 
     score = models.PositiveSmallIntegerField(
         verbose_name='оценка проиведения',
-        choices=[(i, i) for i in range(1, 11)]
-    )
+        choices=[(i, i) for i in range(1, 11)])
 
-    pub_date = models.DateTimeField(
-        verbose_name='дата добавления',
-        auto_now_add=True,
-        db_index=True
-    )
+    pub_date = models.DateTimeField(verbose_name='дата добавления',
+                                    auto_now_add=True,
+                                    db_index=True)
 
     def __str__(self):
         return self.text
@@ -97,16 +106,14 @@ class Reviews(models.Model):
 
 
 class Comment(models.Model):
-    review = models.ForeignKey(
-        Reviews,
-        on_delete=models.CASCADE,
-        related_name='comments'
-    )
+    review = models.ForeignKey(Reviews,
+                               on_delete=models.CASCADE,
+                               related_name='comments',
+                               verbose_name='отзыв')
     text = models.TextField(verbose_name='текст комментария')
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments'
-    )
-    pub_date = models.DateTimeField(
-        verbose_name='Дата добавления',
-        auto_now_add=True, db_index=True
-    )
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='comments',
+                               verbose_name='автор комментария')
+    pub_date = models.DateTimeField(verbose_name='Дата добавления',
+                                    auto_now_add=True, db_index=True)
