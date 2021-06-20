@@ -23,25 +23,37 @@ class User(AbstractUser):
 
 
 class Categories(models.Model):
-    name = models.CharField(db_index=True, max_length=200)
-    slug = models.SlugField(max_length=20, unique=True)
+    name = models.CharField(db_index=True,
+                            max_length=200,
+                            verbose_name='категория произведения')
+    slug = models.SlugField(max_length=20,
+                            unique=True,
+                            verbose_name='короткая метка')
 
     def __str__(self):
         return f'{self.pk} - {self.name} - {self.slug}'
 
 
 class Genres(models.Model):
-    name = models.CharField(db_index=True, max_length=200)
-    slug = models.SlugField(max_length=20, unique=True)
+    name = models.CharField(db_index=True,
+                            max_length=200,
+                            verbose_name='жанр произведения')
+    slug = models.SlugField(max_length=20,
+                            unique=True,
+                            verbose_name='короткая метка')
 
     def __str__(self):
         return f'{self.pk} - {self.name} - {self.slug}'
 
 
 class Titles(models.Model):
-    name = models.CharField(max_length=200)
-    year = models.IntegerField(default=0, db_index=True)
-    description = models.TextField(blank=True)
+    name = models.CharField(max_length=200,
+                            verbose_name='название произведения')
+    year = models.IntegerField(default=0,
+                               db_index=True,
+                               verbose_name='год выпуска')
+    description = models.TextField(blank=True,
+                                   verbose_name='описание произведения')
     genre = models.ManyToManyField(Genres,
                                    blank=True,
                                    related_name='genre_titles')
@@ -56,19 +68,25 @@ class Titles(models.Model):
 
 class Reviews(models.Model):
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name="reviews_title"
+        Titles, on_delete=models.CASCADE, related_name='reviews_title'
     )
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="reviews"
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        verbose_name='автор отзыва'
     )
-    text = models.TextField()
+    text = models.TextField(verbose_name='текст отзыва')
 
     score = models.PositiveSmallIntegerField(
+        verbose_name='оценка проиведения',
         choices=[(i, i) for i in range(1, 11)]
     )
 
     pub_date = models.DateTimeField(
-        "Дата добавления", auto_now_add=True, db_index=True
+        verbose_name='дата добавления',
+        auto_now_add=True,
+        db_index=True
     )
 
     def __str__(self):
@@ -80,12 +98,15 @@ class Reviews(models.Model):
 
 class Comment(models.Model):
     review = models.ForeignKey(
-        Reviews, on_delete=models.CASCADE, related_name="comments"
+        Reviews,
+        on_delete=models.CASCADE,
+        related_name='comments'
     )
-    text = models.TextField()
+    text = models.TextField(verbose_name='текст комментария')
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="comments"
+        User, on_delete=models.CASCADE, related_name='comments'
     )
     pub_date = models.DateTimeField(
-        "Дата добавления", auto_now_add=True, db_index=True
+        verbose_name='Дата добавления',
+        auto_now_add=True, db_index=True
     )
