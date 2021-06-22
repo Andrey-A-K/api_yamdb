@@ -1,21 +1,14 @@
-# from django.db.models.aggregates import Avg, Count
-from rest_framework import serializers
-# from rest_framework.fields import NullBooleanField
-from .models import Comment
-from .models import Reviews
-from .models import Titles
-from .models import Genres
-from .models import Categories
-from .models import User
-# from .models import ROLE_CHOICES
 from .models import Comment, Reviews, Titles, Genres, Categories, User
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 User = get_user_model()
+
+
+class UserEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
 
 
 def get_tokens_for_user(user):
@@ -30,13 +23,6 @@ def get_tokens_for_user(user):
 class EmailAuthSerializer(serializers.Serializer):
     email = serializers.EmailField()
     confirmation_code = serializers.CharField(max_length=100)
-
-    def validate(self, data):
-        user = get_object_or_404(
-            User, confirmation_code=data['confirmation_code'],
-            email=data['email']
-        )
-        return get_tokens_for_user(user)
 
 
 class UserSerializer(serializers.ModelSerializer):
