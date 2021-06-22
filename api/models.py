@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class Role(models.TextChoices):
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
 
 class User(AbstractUser):
-
-    class Role(models.TextChoices):
-        USER = 'user', ('User')
-        MODERATOR = 'moderator', ('Moderator')
-        ADMIN = 'admin', ('Admin')
 
     email = models.EmailField(('email address'), blank=False, unique=True)
     bio = models.TextField(blank=True)
@@ -40,7 +42,7 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     name = models.CharField(max_length=200)
-    year = models.IntegerField(default=0, db_index=True)
+    year = models.IntegerField(null=True, blank=True, db_index=True)
     description = models.TextField(blank=True)
     genre = models.ManyToManyField(Genres,
                                    blank=True,
@@ -63,8 +65,9 @@ class Reviews(models.Model):
     )
     text = models.TextField()
 
-    score = models.PositiveSmallIntegerField(
-        choices=[(i, i) for i in range(1, 11)]
+    score = models.IntegerField(
+        verbose_name='Оценка',
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
     )
 
     pub_date = models.DateTimeField(
