@@ -30,6 +30,7 @@ class IsAuthorOrReadOnly(BasePermission):
 
 
 class ReviewCommentPermissions(BasePermission):
+    """Права доступа для комментариев и отзывов"""
     def has_object_permission(self, request, view, obj):
         if request.method == 'POST':
             return request.user.is_authenticated()
@@ -38,7 +39,4 @@ class ReviewCommentPermissions(BasePermission):
             return (request.user == obj.author
                     or request.user.role == Role.ADMIN
                     or request.user.role == Role.MODERATOR)
-
-        if request.method in SAFE_METHODS:
-            return True
-        return False
+        return request.method in SAFE_METHODS
