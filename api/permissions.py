@@ -5,13 +5,10 @@ User = get_user_model()
 
 
 class IsAdmin(BasePermission):
-    allowed_user_roles = ('admin', )
-
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role in self.allowed_user_roles:
-                return True
-        return False
+        return (
+            request.user.is_authenticated and request.user.role in ('admin', )
+        )
 
 
 class IsModerator(BasePermission):
@@ -61,9 +58,7 @@ class ReviewCommentPermissions(BasePermission):
                     or request.user.role == IsAdmin
                     or request.user.role == IsModerator)
 
-        if request.method in SAFE_METHODS:
-            return True
-        return False
+        return request.method in SAFE_METHODS
 
 
 class IsAuthorOrReadOnly(BasePermission):
