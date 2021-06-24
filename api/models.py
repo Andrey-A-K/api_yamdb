@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 import datetime
+from .validators import validate_year
 from django.core.exceptions import ValidationError
 
 
@@ -13,7 +14,12 @@ class Role(models.TextChoices):
 
 class User(AbstractUser):
 
-    email = models.EmailField(('email address'), blank=False, unique=True)
+    class Role(models.TextChoices):
+        USER = 'user', ('User')
+        MODERATOR = 'moderator', ('Moderator')
+        ADMIN = 'admin', ('Admin')
+
+    email = models.EmailField('email address', blank=False, unique=True)
     bio = models.TextField(blank=True)
     role = models.CharField(
         max_length=20,
@@ -23,7 +29,7 @@ class User(AbstractUser):
     confirmation_code = models.CharField(max_length=100, blank=True, )
 
     def __str__(self):
-        return self.username
+        return self.email
 
 
 class Categories(models.Model):
@@ -93,8 +99,10 @@ class Reviews(models.Model):
 
     score = models.IntegerField(
         verbose_name='Оценка',
-        validators=[MinValueValidator(0), MaxValueValidator(10)]
-    )
+        validators=[
+            MinValueValidator(1, message='Оценка не может быть меньше 1'),
+            MaxValueValidator(10, message='Оценка не может быть бьльше 10')
+        ])
 
     pub_date = models.DateTimeField(verbose_name='дата добавления',
                                     auto_now_add=True,
