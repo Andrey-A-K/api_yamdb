@@ -2,22 +2,6 @@ from datetime import datetime, timedelta
 
 import jwt
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
-                                        PermissionsMixin)
-from django.db import models
-
-User = settings.AUTH_USER_MODEL
-
-USER = 1
-MODERATOR = 2
-ADMIN = 3
-
-ROLE_CHOICES = (
-    ('USER', 'user'),
-    ('MODERATOR', 'moderator'),
-    ('ADMIN', 'admin')
-)
 
 
 class UserManager(BaseUserManager):
@@ -44,22 +28,20 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    username = models.CharField(db_index=True, max_length=255, unique=True)
-    email = models.EmailField(db_index=True, unique=True)
-    bio = models.TextField(max_length=500, blank=True)
-    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=1)
-    # first_name = models.CharField(max_length=250)
-    # last_name = models.CharField(max_length=250)
-    password = models.CharField(max_length=128, blank=True, null=True)
-    # is_active = models.BooleanField(default=True)
-    # is_staff = models.BooleanField(default=False)
 
-    def is_staff(self):
-        return self.is_admin
+    class Role(models.TextChoices):
+        USER = 'user', ('User')
+        MODERATOR = 'moderator', ('Moderator')
+        ADMIN = 'admin', ('Admin')
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-    objects = UserManager()
+    email = models.EmailField(('email address'), blank=False, unique=True)
+    bio = models.TextField(blank=True)
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.USER,
+    )
+    confirmation_code = models.CharField(max_length=100, blank=True, )
 
     def __str__(self):
         return self.email

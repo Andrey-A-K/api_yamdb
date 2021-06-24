@@ -1,141 +1,105 @@
-from django.contrib.auth import authenticate
-from django.db.models.aggregates import Avg
+from .models import Comment, Reviews, Titles, Genres, Categories, User
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import (ROLE_CHOICES, Categories, Comment, Genres, Reviews,
-                     Titles, User)
+
+User = get_user_model()
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+class EmailAuthSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    confirmation_code = serializers.CharField(max_length=100)
+
+    def validate(self, data):
+        user = get_object_or_404(
+            User, confirmation_code=data['confirmation_code'],
+            email=data['email']
+        )
+        return get_tokens_for_user(user)
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('first_name', 'last_name', 'username',
+                  'bio', 'role', 'email')
+        model = User
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Genres
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Genres
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
-    lookup_field = 'slug'
-    extra_kwargs = {
-        'url': {'lookup_field': 'slug'}
-    }
 
     class Meta:
-        model = Categories
         fields = ('name', 'slug')
+        lookup_field = 'slug'
+        model = Categories
 
 
 class TitlesSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField()
-
-    def get_rating(self, obj):
-        Titles.objects.annotate(rating=Avg('reviews__score')).all()
+    rating = serializers.IntegerField(
+        source='reviews__score__avg', read_only=True
+    )
 
     class Meta:
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
         model = Titles
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
+
+class TitleCreateSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genres.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Categories.objects.all()
+    )
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+        model = Titles
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'title_id', 'author', 'text', 'score', 'pub_date')
         model = Reviews
+
+    def validate(self, data):
+        user = self.context['request'].user
+        title_id = self.context['view'].kwargs['title_id']
+        if Reviews.objects.filter(author=user, title__id=title_id).exists():
+            raise serializers.ValidationError(
+                'Вы уже писали отзыв к данному произведению'
+            )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source='author.username')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date',)
         model = Comment
-
-
-class RegistrationSerializer(serializers.ModelSerializer):
-    """ Сериализация регистрации пользователя и создания нового. """
-    token = serializers.CharField(max_length=255, read_only=True)
-
-    class Meta:
-        model = User
-        fields = ['first_name', 'last_name',
-                  'username', 'bio', 'email', 'role', 'token']
-
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
-
-
-class UserSerializer(serializers.ModelSerializer):
-    role = serializers.ChoiceField(choices=ROLE_CHOICES)
-
-    class Meta:
-        fields = ['first_name', 'last_name',
-                  'username', 'bio', 'email', 'role']
-        model = User
-
-    def update(self, instance, validated_data):
-        for key, value in validated_data.items():
-            setattr(instance, key, value)
-            instance.save()
-        return instance
-
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.CharField(max_length=255)
-    username = serializers.CharField(max_length=255, read_only=True)
-    # password = serializers.CharField(max_length=128, write_only=True)
-    token = serializers.CharField(max_length=255, read_only=True)
-
-    def validate(self, data):
-        email = data.get('email', None)
-        # password = data.get('password', None)
-        if email is None:
-            raise serializers.ValidationError(
-                'An email address is required to log in.'
-            )
-        user = authenticate(username=email)
-        if user is None:
-            raise serializers.ValidationError(
-                'A user with this email and password was not found.'
-            )
-        if not user.is_active:
-            raise serializers.ValidationError(
-                'This user has been deactivated.'
-            )
-        return {
-            'email': user.email,
-            'username': user.username,
-            'token': user.token
-        }
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['confirmation_code'] = serializers.CharField(required=True)
-        self.fields.pop('password')
-
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['name'] = user.email
-        return token
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        refresh = self.get_token(self.user)
-        data['refresh'] = str(refresh)
-        data['access'] = str(refresh.access_token)
-        data['confirmation_code'] = self.user.confirmation_code
-        return data
-
-
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
