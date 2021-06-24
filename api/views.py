@@ -24,7 +24,6 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly
 )
 from .models import Titles, Reviews, Titles, Categories, Genres
-from django.core.validators import validate_email
 from .serializers import (
     CommentSerializer,
     ReviewsSerializer,
@@ -54,8 +53,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username', ]
 
     @action(methods=['patch', 'get'], detail=False,
-            permission_classes=[IsAuthenticated],
-            url_path='me', url_name='me')
+            permission_classes=[IsAuthenticated])
     def me(self, request):
         user = request.user
         instance = self.request.user
@@ -73,16 +71,13 @@ class UserViewSet(viewsets.ModelViewSet):
 def send_confirmation_code(request):
     serializer = UserEmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = request.data.get('email')
-    if validate_email(email):
-        user = get_object_or_404(User, email=email)
-        confirmation_code = default_token_generator.make_token(user)
-        generate_mail(email, confirmation_code)
-        message = email
-        user.save()
-    else:
-        message = 'Требуется действующий адрес электронной почты'
-    return Response({'email': message})
+    email = request.data('email')
+    user = get_object_or_404(User, email=email)
+    confirmation_code = default_token_generator.make_token(user)
+    generate_mail(email, confirmation_code)
+    return Response(
+        {'Успешно': 'На вашу почту был выслан код подтверждения'}
+    )
 
 
 class ModelMixinSet(mixins.ListModelMixin,
