@@ -5,10 +5,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 def generate_mail(to_email, code):
     subject = 'Код подтверждения'
-    text_content = (f'''
+    text_content = f'''
         Код подтверждения для работы с API YaMDB.
         Внимание, храните его в тайне {code}
-    ''')
+    '''
     mail.send_mail(
         subject, text_content,
         NOREPLY_YAMDB_EMAIL, [to_email],

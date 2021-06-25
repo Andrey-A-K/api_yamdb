@@ -1,9 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
-import datetime
 from .validators import validate_year
-from django.core.exceptions import ValidationError
 
 
 class Role(models.TextChoices):
@@ -13,11 +11,6 @@ class Role(models.TextChoices):
 
 
 class User(AbstractUser):
-
-    class Role(models.TextChoices):
-        USER = 'user', ('User')
-        MODERATOR = 'moderator', ('Moderator')
-        ADMIN = 'admin', ('Admin')
 
     email = models.EmailField('email address', blank=False, unique=True)
     bio = models.TextField(blank=True)
@@ -54,13 +47,6 @@ class Genres(models.Model):
 
     def __str__(self):
         return f'{self.pk} - {self.name} - {self.slug}'
-
-
-def validate_year(value):
-    year_date = datetime.date.today().year
-    if not (0 < value <= year_date):
-        raise ValidationError('Введите корректный год')
-    return value
 
 
 class Titles(models.Model):
@@ -101,7 +87,7 @@ class Reviews(models.Model):
         verbose_name='Оценка',
         validators=[
             MinValueValidator(1, message='Оценка не может быть меньше 1'),
-            MaxValueValidator(10, message='Оценка не может быть бьльше 10')
+            MaxValueValidator(10, message='Оценка не может быть больше 10')
         ])
 
     pub_date = models.DateTimeField(verbose_name='дата добавления',

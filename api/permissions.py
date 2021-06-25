@@ -9,7 +9,7 @@ class IsAdmin(BasePermission):
 
     def has_permission(self, request, view):
         return (
-            request.user.is_authenticated and request.user.role == 'admin'
+            request.user.is_authenticated and request.user.role == Role.ADMIN
         )
 
 
@@ -20,23 +20,12 @@ class IsAdminUserOrReadOnly(BasePermission):
         return request.user.is_staff
 
 
-class IsAuthorOrReadOnly(BasePermission):
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in SAFE_METHODS:
-            return True
-        if request.user.is_authenticated:
-            return (request.user.is_staff or request.user.role == 'admin')
-
-
 class ReviewCommentPermissions(BasePermission):
     """Права доступа для комментариев и отзывов"""
     def has_object_permission(self, request, view, obj):
         if request.method == 'POST':
             return request.user.is_authenticated()
-
-        if request.method in ('PATCH', 'DELETE'):
-            return (request.user == obj.author
-                    or request.user.role == Role.ADMIN
-                    or request.user.role == Role.MODERATOR)
-        return request.method in SAFE_METHODS
+        return ((request.method in SAFE_METHODS)
+                or request.user == obj.author
+                or request.user.role == Role.ADMIN
+                or request.user.role == Role.MODERATOR)

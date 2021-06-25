@@ -23,7 +23,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
 )
-from .models import Titles, Reviews, Titles, Categories, Genres
+from .models import Titles, Reviews, Titles, Categories, Genres, Role
 from .serializers import (
     CommentSerializer,
     ReviewsSerializer,
@@ -55,14 +55,13 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['patch', 'get'], detail=False,
             permission_classes=[IsAuthenticated])
     def me(self, request):
-        user = request.user
         instance = self.request.user
         serializer = self.get_serializer(instance)
         if self.request.method == 'PATCH':
             serializer = self.get_serializer(
                 instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save(role=user.role, partial=True)
+            serializer.save(role=Role.USER, partial=True)
         return Response(serializer.data)
 
 
@@ -71,7 +70,7 @@ class UserViewSet(viewsets.ModelViewSet):
 def send_confirmation_code(request):
     serializer = UserEmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = request.data('email')
+    email = serializer.data.get('email')
     user = get_object_or_404(User, email=email)
     confirmation_code = default_token_generator.make_token(user)
     generate_mail(email, confirmation_code)
