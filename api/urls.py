@@ -28,7 +28,7 @@ router_v1.register(
     basename='api_comments'
 )
 router_v1.register('titles', TitlesViewSet, basename='titles')
-router_v1.register(r'users', UserViewSet)
+router_v1.register('users', UserViewSet)
 router_v1.register('categories', CategoriesViewSet, basename='categories')
 router_v1.register('genres', GenresViewSet, basename='genres')
 
