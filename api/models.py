@@ -25,19 +25,14 @@ class User(AbstractUser):
         return self.email
 
     @property
-    def is_user(self):
-        if self.role == Role.USER or self.is_admin or self.is_moderator:
-            return True
-
-    @property
     def is_moderator(self):
-        if self.role == Role.MODERATOR or self.is_admin:
-            return True
+        return self.role == Role.MODERATOR
 
     @property
     def is_admin(self):
-        if self.role == Role.ADMIN or self.is_staff is True:
-            return True
+        return bool(
+            self.role == Role.ADMIN or self.is_staff or self.is_superuser
+        )
 
 
 class Categories(models.Model):
@@ -67,8 +62,7 @@ class Genres(models.Model):
 class Titles(models.Model):
     name = models.CharField(max_length=200,
                             verbose_name='название произведения')
-    year = models.IntegerField(default=0,
-                               validators=[validate_year],
+    year = models.IntegerField(validators=[validate_year],
                                db_index=True,
                                verbose_name='год выпуска')
     description = models.TextField(blank=True,
