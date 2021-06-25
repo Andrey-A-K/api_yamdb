@@ -61,7 +61,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(
                 instance, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save(role=Role.USER, partial=True)
+            serializer.save(role=Role.ADMIN, partial=True)
         return Response(serializer.data)
 
 
@@ -70,7 +70,7 @@ class UserViewSet(viewsets.ModelViewSet):
 def send_confirmation_code(request):
     serializer = UserEmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = serializer.data.get('email')
+    email = serializer.data('email')
     user = get_object_or_404(User, email=email)
     confirmation_code = default_token_generator.make_token(user)
     generate_mail(email, confirmation_code)
