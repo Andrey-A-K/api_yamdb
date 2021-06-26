@@ -7,7 +7,7 @@ from rest_framework.permissions import (
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
@@ -34,6 +34,7 @@ from .serializers import (
     CategoriesSerializer,
     TitlesCreateSerializer,
     UserSerializer,
+    EmailAuthSerializer,
     UserEmailSerializer
 )
 from django_filters.rest_framework import DjangoFilterBackend
@@ -96,6 +97,17 @@ def validate(self, data):
         email=data['email']
     )
     return get_tokens_for_user(user)
+
+
+class UserRegToken(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = EmailAuthSerializer(date=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token = AccessToken.for_user(user=user)
+        return Response({'token': str(token)})
 
 
 class ModelMixinSet(mixins.ListModelMixin,
