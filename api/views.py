@@ -7,6 +7,8 @@ from rest_framework.permissions import (
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
 from .filters import TitleFilter
@@ -23,7 +25,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly
 )
-from .models import Titles, Reviews, Titles, Categories, Genres, Role
+from .models import Titles, Reviews, Titles, Categories, Genres
 from .serializers import (
     CommentSerializer,
     ReviewsSerializer,
@@ -55,13 +57,13 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['patch', 'get'], detail=False,
             permission_classes=[IsAuthenticated])
     def me(self, request):
-        instance = self.request.user
-        serializer = self.get_serializer(instance)
+        user = self.request.user
+        serializer = self.get_serializer(user)
         if self.request.method == 'PATCH':
             serializer = self.get_serializer(
-                instance, data=request.data, partial=True)
+                user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save(role=Role.ADMIN, partial=True)
+            serializer.save(role=user.role, partial=True)
         return Response(serializer.data)
 
 
@@ -70,13 +72,30 @@ class UserViewSet(viewsets.ModelViewSet):
 def send_confirmation_code(request):
     serializer = UserEmailSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = serializer.data('email')
+    email = serializer.data['email']
     user = get_object_or_404(User, email=email)
     confirmation_code = default_token_generator.make_token(user)
     generate_mail(email, confirmation_code)
     return Response(
         {'Успешно': 'На вашу почту был выслан код подтверждения'}
     )
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+def validate(self, data):
+    user = get_object_or_404(
+        User, confirmation_code=data['confirmation_code'],
+        email=data['email']
+    )
+    return get_tokens_for_user(user)
 
 
 class ModelMixinSet(mixins.ListModelMixin,
