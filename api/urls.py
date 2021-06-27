@@ -7,13 +7,12 @@ from .views import (
     TitlesViewSet,
     CategoriesViewSet,
     GenresViewSet,
+    get_token,
     send_confirmation_code
 )
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
-from .serializers import EmailAuthSerializer
 
 
 router_v1 = DefaultRouter()
@@ -35,9 +34,7 @@ router_v1.register('genres', GenresViewSet, basename='genres')
 
 v1_auth_patterns = [
     path('email/', send_confirmation_code),
-    path('token/',
-         TokenObtainPairView.as_view(serializer_class=EmailAuthSerializer),
-         name='token_obtain_pair'),
+    path('token/', get_token),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
