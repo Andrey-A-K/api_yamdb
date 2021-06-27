@@ -13,7 +13,7 @@ from django.db.models import Avg
 from django.contrib.auth.tokens import default_token_generator
 from .filters import TitleFilter
 from rest_framework.response import Response
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, status
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
 from .permissions import (
@@ -82,21 +82,19 @@ def send_confirmation_code(request):
     )
 
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
-
-
-def validate(self, data):
-    user = get_object_or_404(
-        User, confirmation_code=data['confirmation_code'],
-        email=data['email']
-    )
-    return get_tokens_for_user(user)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_token(request):
+    email = request.data['email']
+    confirmation_code = request.data['confirmation_code']
+    user = get_object_or_404(User, email=email)
+    if default_token_generator.check_token(user, confirmation_code):
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        })
+    return Response(request.data, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserRegToken(viewsets.ModelViewSet):
